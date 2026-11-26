@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HelpMed Plantão</title>
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="description" content="HelpMed Plantão — apoio ao atendimento na UBS e no PS/UPA: sintomas → hipóteses, conduta e receita pronta.">
+  <meta property="og:title" content="HelpMed Plantão">
+  <meta property="og:description" content="Apoio ao atendimento na UBS e no PS/UPA: sintomas → hipóteses, conduta e receita pronta.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="menu" id="menu" aria-label="Menu">
+    <div class="marca">
+      <img src="icon.svg" alt="" width="34" height="34">
+      <div>
+        <strong>HelpMed Plantão</strong>
+        <small>Apoio ao atendimento · SUS <span class="nomeCidade">Pedreira</span></small>
+      </div>
+    </div>
+    <div class="modo" role="radiogroup" aria-label="Local de atendimento">
+      <button data-modo="ubs" class="ativo">UBS</button>
+      <button data-modo="ps">PS / UPA</button>
+    </div>
+    <div class="modo cidade" role="radiogroup" aria-label="Cidade">
+      <button data-cidade="pedreira" class="ativo">Pedreira</button>
+      <button data-cidade="jaguariuna">Jaguariúna</button>
+    </div>
+    <nav class="nav">
+      <div class="nav-grupo">Atendimento</div>
+      <button data-aba="atendimento" class="ativo"><span class="ico">🩺</span>Prontuário completo</button>
+      <button data-aba="rapido"><span class="ico">⚡</span>Plantão rápido</button>
+      <button data-aba="receita"><span class="ico">💊</span>Receitas <span id="contReceita" class="cont" hidden></span></button>
+      <button data-aba="prenatal"><span class="ico">🤰</span>Pré-natal</button>
+      <button data-aba="pediatria"><span class="ico">🧸</span>Pediatria · dose por peso</button>
+      <div class="nav-grupo">Ferramentas</div>
+      <button data-aba="calculadoras"><span class="ico">🧮</span>Calculadoras</button>
+      <button data-aba="frases"><span class="ico">📝</span>Frases, atestados e cartas</button>
+      <button data-aba="duvidas"><span class="ico">💬</span>Tira-dúvidas (IA)</button>
+    </nav>
+    <div class="menu-rodape">Apoio à decisão — confira doses, alergias e interações. Lista: <span class="nomeCidade">Pedreira</span>.</div>
+  </aside>
+  <div class="veu" id="veu" hidden></div>
+  <header class="barra-mobile">
+    <button id="abrirMenu" aria-label="Abrir menu">☰</button>
+    <strong id="tituloAba">Prontuário completo</strong>
+    <span id="modoMini" class="modo-mini">UBS</span>
+  </header>
+
+  <div class="conteudo">
+
+  <!-- ===================== ATENDIMENTO ===================== -->
+  <main id="aba-atendimento" class="aba">
+    <section class="col col-esq">
+      <div class="card">
+        <div class="linha-paciente">
+          <div class="seg" role="radiogroup" aria-label="Sexo">
+            <button data-sexo="F" class="ativo">Fem</button>
+            <button data-sexo="M">Masc</button>
+          </div>
+          <label>Idade <input id="idade" type="number" min="0" max="120" step="0.01" inputmode="decimal" placeholder="anos" title="Criança: use decimais — 6 meses = 0,5; 3 meses = 0,25"></label>
+          <label>Peso <input id="peso" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kg"></label>
+        </div>
+        <details class="ssvv">
+          <summary>Sinais vitais (opcional)</summary>
+          <div class="grade-ssvv">
+            <label>PA <input id="sv-pa" placeholder="120x80"></label>
+            <label>FC <input id="sv-fc" inputmode="numeric" placeholder="bpm"></label>
+            <label>FR <input id="sv-fr" inputmode="numeric" placeholder="irpm"></label>
+            <label>SpO₂ <input id="sv-sat" inputmode="numeric" placeholder="%"></label>
+            <label>Tax <input id="sv-tax" inputmode="decimal" placeholder="°C"></label>
+            <label>HGT <input id="sv-hgt" inputmode="numeric" placeholder="mg/dL"></label>
+          </div>
+        </details>
+        <div class="flags" id="flags" aria-label="Condições do paciente"></div>
+      </div>
+
+      <div class="card">
+        <label class="rotulo" for="anamnese">Anamnese / queixa <small>(digite livremente — os sintomas são reconhecidos)</small></label>
+        <textarea id="anamnese" rows="6" placeholder="Ex.: Paciente refere dor de garganta há 3 dias, com febre de 38,5 °C e placas na garganta. Nega tosse."></textarea>
+        <div class="add-sintoma">
+          <input id="buscaSintoma" list="listaSintomas" placeholder="+ adicionar sintoma (ou clique nos sugeridos)">
+          <datalist id="listaSintomas"></datalist>
+        </div>
+        <div id="chipsSintomas" class="chips"></div>
+        <div class="ia-barra" id="iaBarra">
+          <button class="ia-btn" data-ia="anamnese" title="Corrige e deixa a anamnese técnica">✨ Melhorar anamnese</button>
+          <button class="ia-btn" data-ia="evolucao" title="Gera anamnese, exame físico, CID, exames e prescrição no seu modelo">✨ Evolução completa (IA)</button>
+          <span class="ia-off nota" hidden>IA desligada — veja como ativar na aba "Dúvidas (IA)".</span>
+        </div>
+        <div class="copia-anam">
+          <button id="copAnam" class="primario">📋 Copiar anamnese</button>
+          <button id="copAnamEf" class="mini">📋 Anamnese + exame físico</button>
+        </div>
+        <p class="nota">A anamnese copiada inclui QP, HDA, <b>negativas pertinentes</b> das hipóteses e antecedentes — confira se nenhuma negativa contradiz o que o paciente disse.</p>
+        <div class="acoes-mini"><button id="limpar" class="link">Novo atendimento (limpar tudo)</button></div>
+      </div>
+
+      <div class="card">
+        <div class="cab-card">
+          <h2>Exame físico</h2>
+          <button class="mini" id="copEf">📋 Copiar exame</button>
+        </div>
+        <p class="nota">Marque os sistemas examinados. Campo vazio = normal; escreva só a alteração e ela substitui o texto normal daquele sistema.</p>
+        <div id="efSistemas" class="ef-sistemas"></div>
+      </div>
+
+      <div class="card">
+        <div class="cab-card">
+          <h2>Hipóteses</h2>
+          <input id="buscaPatologia" type="search" placeholder="buscar patologia ou CID…">
+        </div>
+        <ol id="hipoteses" class="hipoteses"></ol>
+        <details class="todas">
+          <summary>Ver todas as patologias por grupo</summary>
+          <div id="todas"></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="col col-dir" id="painelCondicao">
+      <div class="vazio">
+        <h2>Comece pela queixa</h2>
+        <p>Digite a anamnese ou adicione sintomas à esquerda. As hipóteses mais compatíveis aparecem ranqueadas; clique em uma para ver CID, sinais de alarme, exames, conduta na unidade e prescrição pronta para copiar.</p>
+        <p class="nota">Tudo roda no seu navegador — nenhum dado do paciente sai deste computador.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== PLANTÃO RÁPIDO ===================== -->
+  <main id="aba-rapido" class="aba" hidden>
+    <section class="col col-cheia">
+      <div class="card rap-topo">
+        <div class="cab-card">
+          <h2>⚡ Plantão rápido</h2>
+          <span class="nota">Fichas curtas por queixa — S / O / Conduta / Reavaliação — com lacunas <b>___</b> para completar. Para caso complexo, use o Prontuário completo.</span>
+        </div>
+        <div class="rap-busca">
+          <input id="rapBusca" type="search" placeholder="Buscar queixa ou patologia (ex.: GECA, cistite, dor lombar, crise de asma…)">
+          <div class="seg" role="radiogroup" aria-label="Sexo">
+            <button data-rapsexo="M">♂ Masc</button>
+            <button data-rapsexo="F" class="ativo">♀ Fem</button>
+          </div>
+        </div>
+        <div id="rapLista" class="rap-lista"></div>
+      </div>
+      <div id="rapFicha"></div>
+    </section>
+  </main>
+
+  <!-- ===================== RECEITA AVULSA ===================== -->
+  <main id="aba-receita" class="aba" hidden>
+    <section class="col col-esq">
+      <div class="card">
+        <h2>Buscar medicamento</h2>
+        <input id="buscaMed" type="search" placeholder="nome do medicamento, classe… (ex.: amoxi, dipirona, antibiótico)">
+        <div class="filtro-med">
+          <label><input type="checkbox" id="soRemume"> só UBS <span class="nomeCidade">Pedreira</span></label>
+        </div>
+        <ul id="resultadoMed" class="lista-med"></ul>
+      </div>
+    </section>
+    <section class="col col-dir">
+      <div class="card">
+        <div class="cab-card">
+          <h2>Receita</h2>
+          <div class="botoes">
+            <button id="copiarReceita" class="primario">Copiar receita</button>
+            <button id="limparReceita" class="link">limpar</button>
+          </div>
+        </div>
+        <div id="alertasReceita"></div>
+        <ul id="itensReceita" class="itens-receita"></ul>
+        <p id="receitaVazia" class="nota">Adicione medicamentos pela busca ao lado (ou pelo botão "+ receita" nas patologias e na pediatria).</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== PEDIATRIA ===================== -->
+  <main id="aba-prenatal" class="aba" hidden></main>
+  <main id="aba-pediatria" class="aba" hidden>
+    <section class="col col-cheia">
+      <div class="card">
+        <div class="cab-card">
+          <h2>Dose por peso</h2>
+          <div class="linha-paciente">
+            <label>Peso <input id="pedPeso" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kg"></label>
+            <label>Idade <input id="pedIdade" type="number" min="0" step="0.1" inputmode="decimal" placeholder="anos"></label>
+          </div>
+        </div>
+        <p class="nota">As doses em mg/kg são editáveis. Confira apresentação, dose máxima e idade mínima antes de prescrever.</p>
+        <div id="listaPed" class="grade-ped"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== CALCULADORAS ===================== -->
+  <main id="aba-calculadoras" class="aba" hidden>
+    <section class="col col-cheia">
+      <div class="card">
+        <div class="cab-card"><h2>Calculadoras clínicas</h2><span class="nota">Idade, peso e sexo vêm do atendimento. Cada resultado tem uma linha pronta para o prontuário.</span></div>
+        <div id="calcs" class="grade-calc"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FRASES ===================== -->
+  <main id="aba-frases" class="aba" hidden>
+    <section class="col col-cheia" id="frases"></section>
+  </main>
+
+  <!-- ===================== DÚVIDAS (IA) ===================== -->
+  <main id="aba-duvidas" class="aba" hidden>
+    <section class="col col-cheia">
+      <div class="card" id="iaConfig" hidden>
+        <h2>Ativar a IA</h2>
+        <p id="iaIncompleta" class="alerta alto" hidden>⚠️ A chave salva está <b>incompleta</b> (a lista de chaves só mostra uma versão abreviada). Crie uma chave nova e, na janela que aparece logo depois, clique em <b>Copy</b> — a chave completa só aparece ali, uma vez.</p>
+        <ol class="passos">
+          <li>Crie uma chave grátis do Gemini em <b>aistudio.google.com → Get API key → Create API key</b> (começa com <code>AIza</code>).</li>
+          <li>No Terminal, na pasta <code>prontuario-rapido</code>, rode <code>./salvar-chave.sh</code> e cole a chave</li>
+          <li>Avise o Claude (ou reinicie o app) para ativar.</li>
+        </ol>
+      </div>
+      <div class="card chat">
+        <div class="cab-card"><h2>Dúvidas técnicas</h2><button class="link" id="chatLimpar">nova conversa</button></div>
+        <p class="nota">Pergunta objetiva sobre dose, diretriz, critério, interação… A IA pesquisa fontes atualizadas e avisa se o medicamento está na UBS Pedreira.</p>
+        <div id="chatLog" class="chat-log"></div>
+        <form id="chatForm" class="chat-form">
+          <textarea id="chatInput" rows="2" placeholder="Ex.: dose de amoxicilina para OMA em criança de 15 kg? / quando indicar oseltamivir?"></textarea>
+          <button class="primario" type="submit">Perguntar</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  </div><!-- /conteudo -->
+
+  <!-- painel de resultado da IA -->
+  <aside id="iaPainel" class="ia-painel" hidden aria-label="Resultado da IA">
+    <div class="ia-cab">
+      <strong id="iaTitulo">IA</strong>
+      <span id="iaStatus" class="nota"></span>
+      <button class="mini link" id="iaFechar" aria-label="fechar">✕</button>
+    </div>
+    <textarea id="iaTexto" spellcheck="false"></textarea>
+    <div class="ia-rodape">
+      <span class="nota">Revise antes de usar. Enviado à API de IA (Google Gemini) — não inclua nome ou documentos do paciente.</span>
+      <div class="botoes">
+        <button class="mini" id="iaParar">Parar</button>
+        <button class="mini" id="iaUsar" hidden>Usar na anamnese</button>
+        <button class="primario" id="iaCopiar">Copiar</button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data/remume.js"></script>
+  <script src="data/medicamentos.js"></script>
+  <script src="data/sintomas.js"></script>
+  <script src="data/condicoes.js"></script>
+  <script src="data/alertas.js"></script>
+  <script src="data/pediatria.js"></script>
+  <script src="data/mesclar.js"></script>
+  <script src="data/ubs.js"></script>
+  <script src="data/ps.js"></script>
+  <script src="data/gest.js"></script>
+  <script src="data/ped.js"></script>
+  <script src="data/presc.js"></script>
+  <script src="data/anamneses.js"></script>
+  <script src="data/jaguariuna-ubs.js"></script>
+  <script src="data/cidades.js"></script>
+  <script src="app.js"></script>
+  <script src="ia.js"></script>
+  <script src="calc.js"></script>
+  <script src="prenatal.js"></script>
+</body>
+</html>
